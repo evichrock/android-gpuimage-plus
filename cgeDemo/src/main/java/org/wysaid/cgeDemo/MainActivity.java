@@ -1,11 +1,17 @@
 package org.wysaid.cgeDemo;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -19,6 +25,7 @@ import org.wysaid.nativePort.CGENativeLibrary;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -135,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
             "@adjust saturation 0 @adjust level 0 0.83921 0.8772",
             "@adjust hsl 0.02 -0.31 -0.17 @curve R(0, 28)(23, 45)(117, 148)(135, 162)G(0, 8)(131, 152)(255, 255)B(0, 17)(58, 80)(132, 131)(127, 131)(255, 225)"
     };
+    private static final int REQUEST_PERMISSIONS = 1;
 
     public CGENativeLibrary.LoadImageCallback mLoadImageCallback = new CGENativeLibrary.LoadImageCallback() {
 
@@ -188,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
             new DemoClassDescription("TestCaseActivity", "Test Cases")
     };
 
+    @SuppressLint("AppCompatCustomView")
     public class DemoButton extends Button implements View.OnClickListener {
         private DemoClassDescription mDemo;
 
@@ -239,6 +248,8 @@ public class MainActivity extends AppCompatActivity {
         //The second param will be passed as the second arg of the callback function.
         //第二个参数根据自身需要设置， 将作为 loadImage 第二个参数回传
         CGENativeLibrary.setLoadImageCallback(mLoadImageCallback, null);
+
+        checkToRequestReadExternalPermission();
     }
 
 //    @Override
@@ -273,5 +284,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void checkToRequestReadExternalPermission() {
+        String[] permissions = new String[]{
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA
+        };
+        if (!requestPermissions(this, REQUEST_PERMISSIONS, permissions)) {
+        }
+    }
+
+    private boolean requestPermissions(Activity activity, int requestCode, String... permissions)  {
+        ArrayList<String> notGrantedPermissions = new ArrayList<>();
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                notGrantedPermissions.add(permission);
+            }
+        }
+        if (!notGrantedPermissions.isEmpty()) {
+            String[] notGrantedPermissionsArray = new String[]{};
+            ActivityCompat.requestPermissions(activity, notGrantedPermissions.toArray(notGrantedPermissionsArray), requestCode);
+            return true;
+        }
+        return false;
     }
 }
